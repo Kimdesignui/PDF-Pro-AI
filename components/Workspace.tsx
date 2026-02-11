@@ -1,15 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ToolType, PdfPage } from '../types';
 import { 
-  ArrowLeft, RotateCw, Trash2, FilePlus, 
-  Check, Loader2, Wand2, Shield, PenTool, LayoutGrid, Scissors,
-  FileText, Move, Lock, Ear, ScanLine, X, UploadCloud, Plus, Layers,
-  Play, Pause, RefreshCw, ZoomIn, ZoomOut, Maximize, Minimize, CheckCircle2, Volume2, StopCircle,
+  ArrowLeft, RotateCw, FilePlus, 
+  Loader2, Wand2, Shield, PenTool, Scissors,
+  Lock, ScanLine, X, Plus, Layers,
+  Play, Pause, Volume2, StopCircle,
   Save, Download, RotateCcw, CopyCheck, AlertTriangle
 } from 'lucide-react';
 import { analyzePdfPage } from '../services/geminiService';
 import { jsPDF } from 'jspdf';
 import * as pdfjsLib from 'pdfjs-dist';
+
+// Child Components
+import { PageThumbnail } from './PageThumbnail';
+import { ViewerToolbar } from './ViewerToolbar';
 
 // Set up worker for PDF.js logic inside Workspace (Add File)
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://esm.sh/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs`;
@@ -543,59 +547,21 @@ export const Workspace: React.FC<WorkspaceProps> = ({ tool, initialPages, initia
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-slate-50/30">
-                    {pages.map((page, index) => {
-                        // Calculate thumbnail aspect ratio logic
-                        const isRotatedSideways = Math.abs(page.rotation % 180) === 90;
-                        const originalW = page.width || 595;
-                        const originalH = page.height || 842;
-                        
-                        // Width/Height for Aspect Ratio calculation
-                        const thumbAspect = isRotatedSideways ? (originalH / originalW) : (originalW / originalH);
-                        
-                        return (
-                        <div key={page.id} 
-                             draggable={true}
-                             onDragStart={() => handleSortStart(index)} onDragEnter={() => handleSortEnter(index)} onDragEnd={handleSortEnd}
-                             onClick={() => scrollToPage(page.id)}
-                             className={`flex gap-3 p-2 rounded-xl border transition-all cursor-pointer group ${selectedPageId === page.id ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200 shadow-sm' : 'bg-white border-slate-100 hover:border-blue-200'}`}>
-                            
-                            <div className="w-6 flex flex-col items-center justify-center text-xs font-bold text-slate-300">
-                                {index + 1}
-                                <div className="mt-2 cursor-grab active:cursor-grabbing text-slate-200 hover:text-slate-400"><Move size={12}/></div>
-                            </div>
-                            
-                            {/* Dynamic Thumbnail Container */}
-                            <div className="w-24 bg-slate-200/50 rounded border border-slate-200 overflow-hidden relative flex items-center justify-center self-center" 
-                                 style={{ aspectRatio: `${thumbAspect}` }}>
-                                <div className="relative w-full h-full">
-                                    <img 
-                                        src={page.imageUrl} 
-                                        className="absolute max-w-none origin-center shadow-sm"
-                                        style={{ 
-                                            width: isRotatedSideways ? 'auto' : '100%',
-                                            height: isRotatedSideways ? '100%' : 'auto',
-                                            top: '50%',
-                                            left: '50%',
-                                            transform: `translate(-50%, -50%) rotate(${page.rotation}deg)`,
-                                            minWidth: isRotatedSideways ? '100%' : '0', 
-                                            minHeight: isRotatedSideways ? '0' : '100%'
-                                        }} 
-                                        alt=""
-                                    />
-                                </div>
-                                {tool === ToolType.SPLIT && page.selected && (
-                                    <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center z-10"><CheckCircle2 className="text-blue-600 bg-white rounded-full" size={20}/></div>
-                                )}
-                            </div>
-
-                            <div className="flex-1 flex flex-col justify-center gap-2">
-                                <div className="flex gap-1">
-                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(index); }} className="p-1.5 bg-white border border-slate-100 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded shadow-sm"><Trash2 size={12}/></button>
-                                    <button onClick={(e) => { e.stopPropagation(); handleRotate(page.id, 'right'); }} className="p-1.5 bg-white border border-slate-100 hover:bg-slate-100 text-slate-400 hover:text-blue-600 rounded shadow-sm"><RotateCw size={12}/></button>
-                                </div>
-                            </div>
-                        </div>
-                    )}}
+                    {pages.map((page, index) => (
+                      <PageThumbnail
+                        key={page.id}
+                        page={page}
+                        index={index}
+                        isSelected={selectedPageId === page.id}
+                        tool={tool}
+                        onSelect={scrollToPage}
+                        onDelete={handleDelete}
+                        onRotate={handleRotate}
+                        onDragStart={handleSortStart}
+                        onDragEnter={handleSortEnter}
+                        onDragEnd={handleSortEnd}
+                      />
+                    ))}
                     <div onClick={handleAddFileClick} className="border-2 border-dashed border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-all cursor-pointer h-24">
                         {isUploading ? <Loader2 className="animate-spin mb-1" size={20}/> : <Plus size={20} className="mb-1"/>}
                         <span className="text-xs font-bold">{isUploading ? 'Đang tải...' : 'Thêm trang'}</span>
@@ -605,17 +571,15 @@ export const Workspace: React.FC<WorkspaceProps> = ({ tool, initialPages, initia
 
             {/* Right Panel: Main Stage (PDF Viewer) */}
             <div ref={viewerContainerRef} className="relative flex flex-col flex-1 h-full bg-[#323639] overflow-hidden">
-                {/* Preview Toolbar - Sticky Top */}
-                <div className="sticky top-0 z-50 h-12 bg-[#282b2e]/95 backdrop-blur-sm flex items-center justify-center gap-4 text-slate-300 border-b border-[#3e4245] shadow-lg shrink-0 select-none">
-                    <button onClick={handleZoomOut} className="p-1.5 hover:bg-[#3e4245] hover:text-white rounded transition-colors" title="Zoom Out"><ZoomOut size={16}/></button>
-                    <span className="text-xs font-mono w-14 text-center font-bold">{zoomLevel}%</span>
-                    <button onClick={handleZoomIn} className="p-1.5 hover:bg-[#3e4245] hover:text-white rounded transition-colors" title="Zoom In"><ZoomIn size={16}/></button>
-                    <div className="h-4 w-px bg-[#3e4245] mx-2"></div>
-                    <button onClick={() => setZoomLevel(100)} className="p-1.5 hover:bg-[#3e4245] hover:text-white rounded" title="Actual Size"><Maximize size={14}/></button>
-                    <button onClick={toggleFullscreen} className="p-1.5 hover:bg-[#3e4245] hover:text-white rounded transition-colors" title="Fullscreen">
-                        {isFullscreen ? <Minimize size={16}/> : <ScanLine size={16}/>}
-                    </button>
-                </div>
+                {/* Preview Toolbar */}
+                <ViewerToolbar 
+                    zoomLevel={zoomLevel}
+                    isFullscreen={isFullscreen}
+                    onZoomIn={handleZoomIn}
+                    onZoomOut={handleZoomOut}
+                    onZoomReset={() => setZoomLevel(100)}
+                    onToggleFullscreen={toggleFullscreen}
+                />
 
                 {/* Scrollable Canvas Area */}
                 <div ref={previewScrollRef} className="flex-1 overflow-y-auto p-8 relative custom-scrollbar bg-[#525659]">
