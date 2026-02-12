@@ -1,5 +1,4 @@
 name: Deploy to GitHub Pages
-environment: github-pages
 on:
   push:
     branches: ["main"]
