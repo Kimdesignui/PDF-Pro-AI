@@ -1,11 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // THÊM DÒNG NÀY: Giúp trình duyệt tìm đúng file assets trên GitHub Pages
+  base: '/PDF-Pro-AI/', 
   build: {
-    // Quan trọng: Target 'esnext' cho phép sử dụng top-level await
-    // Đây là yêu cầu bắt buộc khi dùng pdfjs-dist hoặc các thư viện WASM/ESM hiện đại
+    // Hỗ trợ Top-level await cho các thư viện PDF hiện đại
     target: 'esnext',
     outDir: 'dist',
   },
