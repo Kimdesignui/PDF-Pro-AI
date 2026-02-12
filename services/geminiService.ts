@@ -1,39 +1,42 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const analyzePdfPage = async (base64Image: string, mode: 'ocr' | 'read'): Promise<string> => {
+  // 1. Lấy Key đúng cách từ Vite
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  // 2. Kiểm tra Key trước khi khởi tạo để tránh làm trắng màn hình
+  if (!apiKey || apiKey === "undefined") {
+    console.warn("Gemini API Key chưa được thiết lập. Vui lòng kiểm tra GitHub Secrets.");
+    return "Lỗi: Chưa cấu hình API Key. Vui lòng thiết lập VITE_GEMINI_API_KEY trong GitHub Secrets để dùng tính năng này.";
+  }
+
   try {
-    const modelId = 'gemini-3-flash-preview';
+    // 3. Chỉ khởi tạo khi cần dùng (Lazy Initialization)
+    const genAI = new GoogleGenAI(apiKey);
+    const modelId = 'gemini-1.5-flash'; // Tớ gợi ý dùng model này vì độ ổn định cao
+    const model = genAI.getGenerativeModel({ model: modelId });
     
-    // Convert base64 data url to raw base64 string if necessary
     const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
 
     const prompt = mode === 'ocr' 
-      ? "Extract all text from this image exactly as it appears. Maintain the layout structure where possible. Do not add any introductory or concluding remarks."
-      : "Analyze the content of this document page. Provide a comprehensive summary of the key information, main topics, and any important data points. Write it in a way that can be easily read aloud.";
+      ? "Trích xuất toàn bộ văn bản từ hình ảnh này chính xác như hiện tại. Giữ nguyên cấu trúc trình bày."
+      : "Phân tích trang tài liệu này. Cung cấp tóm tắt chi tiết bằng tiếng Việt về các thông tin quan trọng.";
 
-    const response = await ai.models.generateContent({
-      model: modelId,
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: 'image/jpeg', // Assuming placeholder images are JPEGs or similar
-            },
-          },
-          {
-            text: prompt,
-          },
-        ],
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: 'image/jpeg',
+        },
       },
-    });
+      { text: prompt },
+    ]);
 
-    return response.text || "No analysis could be generated.";
+    const response = await result.response;
+    return response.text() || "Không thể tạo phân tích.";
+
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "An error occurred while analyzing the document using AI. Please try again.";
+    return "Đã xảy ra lỗi khi gọi AI. Hãy kiểm tra lại API Key hoặc kết nối mạng.";
   }
 };
