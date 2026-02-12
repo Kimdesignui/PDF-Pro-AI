@@ -3,9 +3,10 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  // THÊM DÒNG NÀY: Thay 'PDF-Pro-AI' bằng đúng tên Repository trên GitHub của bạn
+  base: '/PDF-Pro-AI/', 
   build: {
-    // Ép hệ thống dùng chuẩn esnext để hỗ trợ Top-level await
-    target: 'esnext', 
+    target: 'esnext', // Hỗ trợ Top-level await
   },
   optimizeDeps: {
     esbuildOptions: {
