@@ -1,53 +1,44 @@
 <!DOCTYPE html>
-<html lang="vi"> <head>
+<html lang="vi">
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>PDF Pro AI - Công cụ PDF thông minh</title>
-    
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'Roboto', 'Segoe UI', 'Helvetica', 'sans-serif'],
-            },
-            aspectRatio: {
-              'a4': '1 / 1.4141',
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'Roboto', 'sans-serif'] },
+                    aspectRatio: { 'a4': '1 / 1.4141' }
+                }
             }
-          }
         }
-      }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-      body { font-family: 'Inter', 'Roboto', 'Segoe UI', 'Helvetica', sans-serif; }
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-      @keyframes scan {
-        0% { top: 0%; opacity: 0; }
-        10% { opacity: 1; }
-        90% { opacity: 1; }
-        100% { top: 100%; opacity: 0; }
-      }
-      .animate-scan { animation: scan 2s linear infinite; }
-
-      @keyframes pulse-ring {
-        0% { transform: scale(0.33); opacity: 0.5; }
-        80%, 100% { opacity: 0; transform: scale(1.5); }
-      }
-      .animate-pulse-ring::before {
-        content: '';
-        position: absolute;
-        left: 0; top: 0; right: 0; bottom: 0;
-        border-radius: 50%;
-        border: 2px solid #3b82f6;
-        animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-      }
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        .animate-scan { animation: scan 2s linear infinite; }
     </style>
-
-    <script
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@^19.2.4",
+            "react-dom": "https://esm.sh/react-dom@^19.2.4",
+            "react-dom/client": "https://esm.sh/react-dom@^19.2.4/client",
+            "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+            "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+            "pdfjs-dist": "https://esm.sh/pdfjs-dist@4.0.379",
+            "jspdf": "https://esm.sh/jspdf@2.5.1"
+        }
+    }
+    </script>
+</head>
+<body class="bg-slate-50 antialiased">
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+</body>
+</html>
