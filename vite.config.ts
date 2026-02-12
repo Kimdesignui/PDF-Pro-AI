@@ -4,14 +4,12 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   build: {
-    // Quan trọng: Target 'esnext' cho phép sử dụng top-level await
-    // Đây là yêu cầu bắt buộc khi dùng pdfjs-dist hoặc các thư viện WASM/ESM hiện đại
-    target: 'esnext',
-    outDir: 'dist',
+    // Ép hệ thống dùng chuẩn esnext để hỗ trợ Top-level await
+    target: 'esnext', 
   },
   optimizeDeps: {
     esbuildOptions: {
-      target: 'esnext',
-    },
-  },
+      target: 'esnext'
+    }
+  }
 });
